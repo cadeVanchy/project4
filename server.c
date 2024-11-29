@@ -32,6 +32,9 @@ int main() {
 		// TODO:
 		// read requests from serverFIFO
 
+		// read the whole message struct from the server FIFO
+		read(server,&req,sizeof(req));
+
 
 
 
@@ -42,12 +45,9 @@ int main() {
 		// TODO:
 		// open target FIFO and write the whole message struct to the target FIFO
 		// close target FIFO after writing the message
-
-
-
-
-
-
+		target = open(req.target,O_WRONLY);
+		write(target,&req,sizeof(req));
+		close(target);
 
 	}
 	close(server);
