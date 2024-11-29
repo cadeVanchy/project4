@@ -63,7 +63,7 @@ void* messageListener(void *arg) {
 	char fifoName[256];
 
     // Construct the name of the user's FIFO
-    snprintf(fifoName, sizeof(fifoName), "%s_fifo", uName);
+    snprintf(fifoName, sizeof(fifoName), "%s", uName);
 
     // Open the FIFO for reading
     int userFifo = open(fifoName, O_RDONLY);
