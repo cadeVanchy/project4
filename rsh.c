@@ -38,12 +38,12 @@ void sendmsg (char *user, char *target, char *msg) {
     strncpy(msgStruct.msg, msg, sizeof(msgStruct.msg) - 1);
 
     // Open server FIFO (replace "server_fifo" with the actual path to the server FIFO)
-    int serverFifo = open("server_fifo", O_WRONLY);
+    int serverFifo = open("serverFIFO", O_WRONLY);
     if (serverFifo == -1) {
         perror("Failed to open server FIFO");
+		printf("Error opening serverFIFO for user: %s, target: %s, message: %s\n", user, target, msg);
         return;
     }
-
     // Write the message structure to the FIFO
     if (write(serverFifo, &msgStruct, sizeof(msgStruct)) == -1) {
         perror("Failed to write to server FIFO");
@@ -66,19 +66,18 @@ void* messageListener(void *arg) {
     snprintf(fifoName, sizeof(fifoName), "%s", uName);
 
     // Open the FIFO for reading
-    int userFifo = open(fifoName, O_RDONLY);
+    int userFifo = open(fifoName, O_RDONLY | O_NONBLOCK);
     if (userFifo == -1) {
         perror("Failed to open user FIFO");
         pthread_exit((void*)1);
     }
-
     struct message incomingMsg;
 
     while (1) {
         // Read incoming messages
         ssize_t bytesRead = read(userFifo, &incomingMsg, sizeof(incomingMsg));
         if (bytesRead == sizeof(incomingMsg)) {
-            printf("Incoming message from [%s]: %s\n", incomingMsg.source, incomingMsg.msg);
+            printf("Incoming message from %s: %s\n", incomingMsg.source, incomingMsg.msg);
             fflush(stdout);
         }
     }

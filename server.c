@@ -26,22 +26,28 @@ int main() {
 	signal(SIGPIPE,SIG_IGN);
 	signal(SIGINT,terminate);
 	server = open("serverFIFO",O_RDONLY);
+	if (server < 0) {
+    perror("Failed to open server FIFO");
+    exit(1);
+	}
 	dummyfd = open("serverFIFO",O_WRONLY);
+	if (dummyfd < 0) {
+    perror("Failed to open server FIFO");
+    exit(1);
+}
 
 	while (1) {
 		// TODO:
 		// read requests from serverFIFO
-		// Read requests from serverFIFO
 		ssize_t bytesRead = read(server, &req, sizeof(req));
-		if (bytesRead != sizeof(req)) {
-			if (bytesRead == 0) {
-				// EOF: Server FIFO was closed
-				printf("Server FIFO closed. Exiting...\n");
-				break;
-			}
-			perror("Failed to read from serverFIFO");
-			continue;
+		if (bytesRead < 0) {
+    	perror("Error reading from server FIFO");
+    	continue;
 		}
+		if (bytesRead == 0) {
+    	printf("No data received. Waiting...\n");
+    	continue; // If no data, keep waiting
+	}
 		printf("Received a request from %s to send the message %s to %s.\n",req.source,req.msg,req.target);
 
 		// TODO:
@@ -49,7 +55,7 @@ int main() {
 		// close target FIFO after writing the message
 		// Open target FIFO and write the message struct to it
 		char targetFIFO[256];
-		snprintf(targetFIFO, sizeof(targetFIFO), "%s_fifo", req.target);
+		snprintf(targetFIFO, sizeof(targetFIFO), "%s", req.target);
 
 		target = open(targetFIFO, O_WRONLY);
 		if (target == -1) {
@@ -60,7 +66,6 @@ int main() {
 		if (write(target, &req, sizeof(req)) == -1) {
 			perror("Failed to write to target FIFO");
 		} else {
-			printf("Message successfully sent to %s.\n", req.target);
 		}
 
 		close(target);
